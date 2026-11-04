@@ -1,7 +1,6 @@
 # Importance Sampling: seltene Ausfälle schätzen – Streamlit-Demo
 
-<!-- TODO nach dem Deploy: direkt hierher den Live-Link setzen (Leerzeile davor und danach):
-**[→ Demo live ausprobieren](https://sebastianhanisch-importance-sampling-demo.streamlit.app/)** -->
+**[→ Demo live ausprobieren](https://sebastianhanisch-importance-sampling-demo.streamlit.app/)**
 
 Siebtes Stück der Linie **„Monte-Carlo-Schätzung und Varianzreduktion“** in der „Konzepte“-Reihe für die Website „Sebastian Hanisch – Operations Research und Machine Learning“ (die Linie wird erst vollständig veröffentlicht). Nachfolger von [bedingtes-monte-carlo-demo](https://github.com/sebastian-hanisch/bedingtes-monte-carlo-demo) (Stück 6, das bei seltenen Ausfällen das naive Intervall repariert) und [monte-carlo-schaetzer-demo](https://github.com/sebastian-hanisch/monte-carlo-schaetzer-demo) (Stück 1, das zeigt, dass einfaches Ziehen seltene Ereignisse nicht sieht). Hier hebt das Stück die Annahme „gezogen wird aus der Verteilung des Problems“ auf: Gezogen wird aus einer **Hilfsverteilung**, die den Ausfall häufig macht, und **gewichtet**. Vehikel ist wie in Stück 1 bis 6 die Zuverlässigkeit eines Gitternetzes (Ereignis: das Netz hängt **nicht** zusammen), dazu die Hantel (zwei Dreiecke, eine Brücke) und ein **stetiger Begleiter** mit geschlossener Formel. Die Wahrheit ist exakt aufgezählt.
 
@@ -120,4 +119,4 @@ Gebaut mit Streamlit, Plotly, NumPy und fpdf2.
 
 ---
 
-Diese Demo ist Teil des Portfolios von [Sebastian Hanisch](https://sebastianhanisch.net) – Operations Research und Machine Learning ([Über mich](https://sebastianhanisch.net/ueber-mich.html)). Mehr zu den Demos: [Interaktive Demos](https://sebastianhanisch.net/demos.html).
+Diese Demo ist Teil des Portfolios von [Sebastian Hanisch](https://sebastianhanisch.net) – Operations Research und Machine Learning ([Über mich](https://sebastianhanisch.net/ueber-mich.html)). Mehr zur Reihe: [Monte-Carlo-Schätzung: vom Schätzer zur Wahl](https://sebastianhanisch.net/konzepte-monte-carlo.html).
