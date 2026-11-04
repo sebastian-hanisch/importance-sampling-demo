@@ -87,9 +87,22 @@ Fällt ein Netz nur selten aus, sieht einfaches Ziehen kaum einen Ausfall: bei 1
 Der Gewinn ist hier **exakt berechenbar**, er wächst mit der Seltenheit, die beste Kippung ist für kleine q etwa der kleinste Schnitt (ohne Kenntnis der Struktur muss man sie lernen), und **zu viel Kippung (hier ab q' ≈ 0,4) ist schlimmer als gar keine**.
 Als Diagnose taugt die **effektive Stichprobengröße (ESS)**; **Pareto-k̂** warnt bei den diskreten Gewichten dieser Demo nicht, nur bei stetigen Gewichten (unten ein stetiger Begleiter mit unendlicher Varianz).
 
+Wer die Idee ohne Fachwörter lesen möchte, öffnet **💬 In einfachen Worten** und findet dort auch den Link auf die ausführliche Erklärseite.
+
 Weiter unten: **🔬 fünf Experimente**, **🧪 Spielwiese**, **🚧 Wo die Annahmen enden** und die Expander **⚠️ Annahmen, Grenzen und bekannte Probleme** und **📐 Mathematische Formulierung**.
 """
 )
+
+# erklaerseite:einfach:start (erzeugt von tools/set_demo_explainer.py (Website-Repo) aus tools/content/explainers/seltene-ereignisse-erklaert.json, nicht von Hand ändern)
+with st.expander("💬 In einfachen Worten"):
+    st.markdown(
+        """
+Ein Netz fällt nur selten aus. Würfelt man es am Rechner durch, kann der Ausfall in allen Durchgängen fehlen, und das Ergebnis lautet fälschlich „null“. **Importance Sampling** dreht das um: Man lässt die Verbindungen absichtlich **häufiger ausfallen**, als sie es tatsächlich tun, und gibt jedem Durchgang ein **Gewicht**, das die Übertreibung wieder herausrechnet. So sieht man Ausfälle, ohne das Ergebnis zu verfälschen. Der Haken: Wer **zu stark** übertreibt, schneidet schlechter ab als ohne jede Übertreibung, weil einzelne Durchgänge das Ergebnis fast allein bestimmen. Ein Regler stellt die Stärke der Übertreibung ein, und die Wahrheit ist in erfundenen Netzen ausgezählt. Die gängige Warnzahl für entartete Gewichte hilft in diesen Netzen nicht; die Demo misst stattdessen, wie viele Durchgänge wirklich mitzählen.
+
+[Ausführlich und verständlich erklärt, mit Fachteil](https://sebastianhanisch.net/seltene-ereignisse-erklaert.html)
+        """
+    )
+# erklaerseite:einfach:end
 
 with st.expander("So funktioniert Importance Sampling", expanded=True):
     st.markdown(
@@ -293,6 +306,29 @@ with st.expander("⚠️ Annahmen, Grenzen und bekannte Probleme"):
 st.markdown("---")
 
 with st.expander("📐 Mathematische Formulierung"):
+    # erklaerseite:lesehilfe:start (erzeugt von tools/set_demo_explainer.py (Website-Repo) aus tools/content/explainers/seltene-ereignisse-erklaert.json, nicht von Hand ändern)
+    st.markdown(
+        r"""
+**Lesehilfe.** Gegeben ist ein Netz mit $m$ Kanten, die unabhängig mit Wahrscheinlichkeit $q$ ausfallen. Gesucht ist die Wahrscheinlichkeit $P$, dass das Netz nicht mehr zusammenhängt, und die Zahl der Ziehungen, die ein Schätzer dafür braucht.
+
+| Symbol | Bedeutung |
+|---|---|
+| $m$ | Zahl der Kanten des Netzes |
+| $q$, $q'$ | Ausfallwahrscheinlichkeit je Kante in der Aufgabe bzw. in der Hilfsverteilung (die Kippung) |
+| $A$, $P$ | Ereignis „das Netz hängt nicht zusammen“ und seine Wahrscheinlichkeit |
+| $f$, $w(f)$ | Zahl der Ausfälle in einer Ziehung und das Gewicht einer Ziehung mit $f$ Ausfällen |
+| $N$, $\hat P$ | Zahl der Ziehungen und der Schätzer von $P$ (Mittel der gewichteten Ziehungen) |
+| $N_f$ | Zahl der Ausfallmengen mit $f$ ausgefallenen Kanten |
+| $M_2$ | zweites Moment der gewichteten Ziehung |
+| $\mathrm{CV}^2$ | relatives Varianzquadrat je Ziehung |
+| $\mathrm{ESS}$ | effektive Stichprobengröße der Gewichte |
+| $k$ | Formparameter des Rands der Gewichte (Pareto-$\hat k$); $k \ge 1/2$ bedeutet unendliche Varianz |
+| $X$, $t$, $\theta$ | stetiger Begleiter: $X \sim \mathrm{Exp}(1)$, Schwelle $t$, Rate $\theta$ der Hilfsverteilung |
+
+[Schritt für Schritt erklärt, mit Herleitung und Literatur](https://sebastianhanisch.net/seltene-ereignisse-erklaert.html#fachleute)
+        """
+    )
+    # erklaerseite:lesehilfe:end
     st.markdown(
         r"""
 **Problem.** Gesucht ist $P = \mathbb P(A)$ für das seltene Ereignis $A$ = „das Netz hängt nicht zusammen“; jede der $m$ Kanten fällt unabhängig mit Wahrscheinlichkeit $q$ aus.
