@@ -38,7 +38,7 @@ def build_pdf(settings: Settings, a: Analysis) -> bytes:
     for label, val in (("Ausfallwahrscheinlichkeit P (exakt)", de_e(a.P)), ("CV^2 einfaches Ziehen (exakt)", dz(a.cv2_plain)), ("CV^2 bei der Kippung (exakt)", dz(a.cv2_is)),
                        ("Gewinn", dz(a.gain)), ("optimale Kippung q'", dn(a.qp_opt, 3)), ("Ziehungen für 10 % (einfach / gekippt)", f"{dz(a.n_plain)} / {dz(a.n_is)}"),
                        ("mediane Abweichung (gemessen)", f"{de(a.med_rel * 100, 0)} %"), ("Läufe ohne Ausfall", f"{de(a.zero * 100, 0)} %"), ("Überdeckung des 95-%-Intervalls", de(a.cover, 2)),
-                       ("ESS gemessen / exakt", f"{de(a.ess_meas, 1)} / {de(a.ess_exact, 1)}"), ("Pareto-k-Dach (Median)", dn(a.k_med, 2))):
+                       ("ESS gemessen / Formel", f"{de(a.ess_meas, 1)} / {de(a.ess_exact, 1)}"), ("Pareto-k-Dach (Median)", dn(a.k_med, 2))):
         pdf.cell(widths[0], 6, _s(label), border=1)
         pdf.cell(widths[1], 6, _s(val), border=1)
         pdf.ln()

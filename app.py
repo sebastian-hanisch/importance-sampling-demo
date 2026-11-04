@@ -2,8 +2,8 @@
 Sebastian Hanisch - Operations Research und Machine Learning
 
 Stück 7 der Linie "Monte-Carlo-Schätzung und Varianzreduktion": Seltene Ereignisse werden aus einer Hilfsverteilung gezogen und mit dem Dichtequotienten gewichtet. Der Gewinn ist
-exakt aus der Aufzählung berechenbar und wächst mit der Seltenheit; die optimale Kippung kennt man nur, wenn man die Struktur der Antwort schon kennt; zu viel Kippung entartet. Die
-ehrliche Diagnose ist die effektive Stichprobengröße (ESS); Pareto-k̂ versagt bei diskreten Gewichten und wirkt im stetigen Begleiter. Vehikel ist der Ausfall eines Gitternetzes.
+exakt aus der Aufzählung berechenbar und wächst mit der Seltenheit; die optimale Kippung ist für kleine q etwa der kleinste Schnitt, ohne Kenntnis der Struktur muss man sie lernen; zu viel Kippung entartet. Die
+ehrliche Diagnose ist die effektive Stichprobengröße (ESS); Pareto-k̂ ist bei den diskreten Gewichten dieser Demo nicht aussagekräftig und wirkt im stetigen Begleiter. Vehikel ist der Ausfall eines Gitternetzes.
 
 Lauffähig mit: streamlit run app.py
 """
@@ -83,9 +83,9 @@ with st.container(key="kopf"):
 st.markdown(
     """
 Fällt ein Netz nur selten aus, sieht einfaches Ziehen kaum einen Ausfall: bei 1000 Ziehungen und einer Ausfallwahrscheinlichkeit von 4·10⁻⁴ zeigen zwei von drei Läufen keinen einzigen und melden null.
-**Importance Sampling** zieht stattdessen aus einer **Hilfsverteilung**, in der jede Kante öfter ausfällt (q' statt q), und **gewichtet** jede Ziehung mit dem Dichtequotienten. Das senkt die Varianz um Zehnerpotenzen, **wenn** die Hilfsverteilung passt.
-Der Gewinn ist hier **exakt berechenbar**, er wächst mit der Seltenheit, die beste Kippung kennt man nur, wenn man die Struktur der Antwort schon kennt (der kleinste Schnitt), und **zu viel Kippung ist schlimmer als gar keine**.
-Als Diagnose taugt die **effektive Stichprobengröße (ESS)**; **Pareto-k̂** warnt nur bei stetigen Gewichten (unten ein stetiger Begleiter mit unendlicher Varianz).
+**Importance Sampling** zieht stattdessen aus einer **Hilfsverteilung**, in der jede Kante öfter ausfällt (q' statt q), und **gewichtet** jede Ziehung mit dem Dichtequotienten. Das senkt die Varianz bei seltenen Ausfällen um Zehnerpotenzen (2,1-fach bei q = 0,1, 2210-fach bei q = 0,001), **wenn** die Hilfsverteilung passt.
+Der Gewinn ist hier **exakt berechenbar**, er wächst mit der Seltenheit, die beste Kippung ist für kleine q etwa der kleinste Schnitt (ohne Kenntnis der Struktur muss man sie lernen), und **zu viel Kippung (hier ab q' ≈ 0,4) ist schlimmer als gar keine**.
+Als Diagnose taugt die **effektive Stichprobengröße (ESS)**; **Pareto-k̂** warnt bei den diskreten Gewichten dieser Demo nicht, nur bei stetigen Gewichten (unten ein stetiger Begleiter mit unendlicher Varianz).
 
 Weiter unten: **🔬 fünf Experimente**, **🧪 Spielwiese**, **🚧 Wo die Annahmen enden** und die Expander **⚠️ Annahmen, Grenzen und bekannte Probleme** und **📐 Mathematische Formulierung**.
 """
@@ -98,7 +98,7 @@ with st.expander("So funktioniert Importance Sampling", expanded=True):
 2. **Hilfsverteilung:** Man zieht jede Kante mit Ausfallwahrscheinlichkeit q' (zum Beispiel 12 % statt 1 %). Ausfälle treten dann oft auf.
 3. **Gewichte:** Eine Ziehung mit f Ausfällen bekommt das Gewicht w(f) = (q/q')^f · ((1−q)/(1−q'))^(m−f). Der Schätzer ist das Mittel von 1[Ausfall] · w und bleibt erwartungstreu.
 4. **Exakte Varianz:** Das zweite Moment ist Σ_f N_f [q^f (1−q)^(m−f)]² / [q'^f (1−q')^(m−f)] (N_f = Zahl der Ausfallmengen mit f Ausfällen). Daraus folgen CV² (relatives Varianzquadrat je Ziehung), die nötige Zahl von Ziehungen und die beste Kippung.
-5. **Diagnose:** ESS = (Σw)² / Σw² = N / (1 + CV²); der relative Fehler ist etwa 1/√ESS. Pareto-k̂ (Rand der Gewichte) über 0,5 heißt unendliche Varianz, über 0,7 nicht verlässlich; im Netz mit diskreten Gewichten ist es nicht aussagekräftig.
+5. **Diagnose:** ESS = (Σw)² / Σw², nahe dem Optimum etwa N / (1 + CV²); der relative Fehler ist etwa 1/√ESS, solange die Gewichte nicht entarten. Pareto-k̂ (Rand der Gewichte) über 0,5 heißt unendliche Varianz, über 0,7 nicht verlässlich; bei den diskreten Gewichten dieser Demo (zwei Netze, eigene Implementierung) ist es nicht aussagekräftig.
         """
     )
 
@@ -117,7 +117,7 @@ with st.sidebar:
                          help="Je kleiner q, desto seltener der Netzausfall und desto größer der Gewinn von Importance Sampling.")
     st.markdown("**Hilfsverteilung**")
     qp = st.slider("Kippung q' (Ausfall je Kante in der Hilfsverteilung)", *bounds("qp_slider"), key="qp_slider", step=0.005, format="%.3f",
-                   help="Mit q' = q ist es einfaches Ziehen. Gut ist etwa kleinster Schnitt durch Kantenzahl; zu große Werte entarten.")
+                   help="Mit q' = q ist es einfaches Ziehen. Gut ist bei kleinen q etwa kleinster Schnitt durch Kantenzahl; zu große Werte entarten.")
     n = st.select_slider("Ziehungen N", options("n_select"), key="n_select", help="Ziehungen je Schätzung.")
     st.markdown("**Stetiger Begleiter (Experiment 5)**")
     t = st.slider("Schwelle t", *bounds("t_slider"), key="t_slider", step=0.5, help="Gesucht ist P(X > t) für X mit Exponentialverteilung der Rate 1.")
@@ -139,7 +139,7 @@ if a.P > 0:
     m1.metric("Ausfallwahrscheinlichkeit P", de_e(a.P), help=f"Exakte Wahrscheinlichkeit, dass das {a.netz.name} bei q = {_q_label(settings.q)} je Kante nicht mehr zusammenhängt (Aufzählung aller Kantenmengen).")
     m2.metric("Gewinn gegen einfaches Ziehen", dz(a.gain), help="CV² einfach durch CV² bei der gewählten Kippung (exakt): so viel weniger Ziehungen braucht dasselbe Ergebnis.")
     m3.metric("Ziehungen für 10 % Fehler", dz(a.n_is), delta=f"einfach {dz(a.n_plain)}", delta_color="off", help="100 mal CV² (relativer Fehler 10 %), exakt.")
-    m4.metric("ESS (gemessen)", de(a.ess_meas, 1), delta=f"exakt {de(a.ess_exact, 1)}", delta_color="off", help="Effektive Stichprobengröße der Gewichte, Median über die Wiederholungen; exakt N / (1 + CV²).")
+    m4.metric("ESS (gemessen)", de(a.ess_meas, 1), delta=f"Formel {de(a.ess_exact, 1)}", delta_color="off", help="Effektive Stichprobengröße der Gewichte, Median über die Wiederholungen; die Formel N / (1 + CV²) trifft sie nahe dem Optimum, bei zu starker Kippung liegt die Messung weit darüber.")
     st.caption(f"Optimale Kippung q' = {de(a.qp_opt, 3)} (kleinster Schnitt {ev.kanten(a.min_cut)} von {a.netz.m}: {de(a.min_cut / a.netz.m, 3)}). Gemessen mit N = {de(settings.n, 0)}: mediane Abweichung {de(a.med_rel * 100, 0)} %, "
                f"{de(a.zero * 100, 0)} % der Läufe ohne einen Ausfall, Überdeckung des 95-%-Intervalls {de(a.cover, 2)}, Pareto-k̂ im Median {dn(a.k_med, 1)}.")
     if any(x > 0 for x in a.est):
@@ -200,7 +200,7 @@ if st.session_state.get("sweep_done"):
         st.dataframe(
             {"q'": [de(r["qp"], 3) for r in ex3["rows"]], "CV² (exakt)": [dz(r["cv2"]) for r in ex3["rows"]], "mediane Abweichung": [f"{de(r['med_rel'] * 100, 0)} %" for r in ex3["rows"]],
              "ohne Ausfall": [f"{de(r['zero'] * 100, 0)} %" for r in ex3["rows"]], "Überdeckung": [de(r["cover"], 2) for r in ex3["rows"]], "ESS gemessen": [de(r["ess"], 1) for r in ex3["rows"]],
-             "ESS exakt": [de(r["ess_exact"], 1) for r in ex3["rows"]], "Pareto-k̂ (Median)": [dn(r["k_med"], 1) for r in ex3["rows"]]},
+             "ESS nach Formel": [de(r["ess_exact"], 1) for r in ex3["rows"]], "Pareto-k̂ (Median)": [dn(r["k_med"], 1) for r in ex3["rows"]]},
             hide_index=True, width="stretch", key="sweep_table",
         )
     kind, text = ev.verdict_sweep(ex3, settings)
@@ -270,9 +270,9 @@ st.markdown(
     """
 | Annahme | Was passiert, wenn sie verletzt ist | Wer setzt an |
 |---|---|---|
-| **Man kennt eine gute Hilfsverteilung** | Die beste Kippung ist etwa kleinster Schnitt durch Kantenzahl; das weiß man nur, wenn man die Struktur der Antwort schon kennt. Zu schwach gekippt bringt nichts, zu stark ist schlimmer als gar keine (Experimente 1 und 3). | Stück 8 (adaptives Importance Sampling lernt sie) |
+| **Man kennt eine gute Hilfsverteilung** | Die beste Kippung ist für kleine q etwa kleinster Schnitt durch Kantenzahl; ohne Kenntnis der Struktur muss man sie lernen. Zu schwach gekippt bringt nichts, zu stark (hier ab q' ≈ 0,4) ist schlimmer als gar keine (Experimente 1 und 3). | Stück 8 (adaptives Importance Sampling lernt sie) |
 | **Die Gewichte tragen** | Wenige Ziehungen bestimmen das Ergebnis; ESS sagt, wie viele effektiv zählen. | – |
-| **Pareto-k̂ ist aussagekräftig** | Bei diskreten Gewichten (Netz) nicht; bei stetigen schon (Experiment 5). | – |
+| **Pareto-k̂ ist aussagekräftig** | Bei den diskreten Gewichten dieser Demo (Netz) nicht; bei stetigen schon (Experiment 5). | – |
 | **Das Wald-Intervall gilt** | Bei kleiner ESS und schwerem Rand ist es zu schmal; bei unendlicher Varianz bemerkt es das mit N = 10 000 nicht. | – |
 | **Eine globale Kippung genügt** | Sie ist die einparametrige Familie; je Kante verschieden gekippt wäre besser. | Stück 8 (Kreuzentropie) |
 | **Importance Sampling statt Splitting** | Beide schätzen seltene Ereignisse, Splitting über eine Folge von Zwischenstufen. | `splitting-demo` (Warteschlangen 9) |
@@ -303,7 +303,7 @@ with st.expander("📐 Mathematische Formulierung"):
 $$M_2 = \sum_f N_f\,\frac{\bigl[q^f(1-q)^{m-f}\bigr]^2}{q'^f(1-q')^{m-f}},\qquad \mathrm{CV}^2 = \frac{M_2 - P^2}{P^2}.$$
 Für 10 % relativen Fehler braucht man $N \approx 100\,\mathrm{CV}^2$ Ziehungen. Einfaches Ziehen ist $q' = q$: $\mathrm{CV}^2 = (1-P)/P$.
 
-**Effektive Stichprobengröße.** $\mathrm{ESS} = (\sum w_i)^2 / \sum w_i^2$; im Erwartungswert $N/(1+\mathrm{CV}^2)$. Der relative Fehler ist etwa $1/\sqrt{\mathrm{ESS}}$.
+**Effektive Stichprobengröße.** $\mathrm{ESS} = (\sum w_i)^2 / \sum w_i^2$; nahe dem Optimum etwa $N/(1+\mathrm{CV}^2)$ (ein Verhältnis von Erwartungswerten, bei schweren Rändern der Gewichte weicht die gemessene ESS stark ab). Der relative Fehler ist etwa $1/\sqrt{\mathrm{ESS}}$, solange die Gewichte nicht entarten.
 
 **Pareto-k̂.** An den größten Gewichten wird eine verallgemeinerte Pareto-Verteilung mit Formparameter $k$ angepasst (Zhang und Stephens 2009). $k \ge 1/2$ bedeutet unendliche Varianz, $k > 0{,}7$ gilt nach Vehtari et al. als nicht verlässlich.
 

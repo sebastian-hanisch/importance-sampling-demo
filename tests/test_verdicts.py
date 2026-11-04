@@ -69,7 +69,7 @@ def test_simulations_verdikt_zahlen():
             {"qp": 0.119, "zero": 0.0, "cover": 0.92, "med_rel": 0.2, "ess": 12.4, "ess_exact": 12.3, "k_med": 2.5, "frac_k_bad": 1.0},
             {"qp": 0.7, "zero": 0.0, "cover": 0.02, "med_rel": 1.0, "ess": 2.0, "ess_exact": 2.1, "k_med": 7.6, "frac_k_bad": 1.0}]
     kind, text = ev.verdict_sweep({"rows": rows, "qp_opt": 0.119, "P": 4e-4}, S)
-    assert kind == "warning" and "65 % der Läufe ohne Ausfall, Überdeckung 0,35" in text and "q' = 0,119: mediane Abweichung 20 %" in text and "ESS 12,4 (exakt 12,3)" in text
+    assert kind == "warning" and "65 % der Läufe ohne Ausfall, Überdeckung 0,35" in text and "q' = 0,119: mediane Abweichung 20 %" in text and "ESS 12,4 (Formel 12,3)" in text
     assert "q' = 0,70: Abweichung 100 %, Überdeckung 0,02" in text and "bei 2,5 und in 100 % der Läufe über 0,7" in text
     assert ev.verdict_sweep({"rows": [], "qp_opt": float("nan"), "P": 0.0}, S)[0] == "info"
 

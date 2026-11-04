@@ -1,7 +1,7 @@
 """Kennzahlen, Verdikt-Logik und Experimente über feste Ströme (reine Funktionen, kein Streamlit).
 
 Ereignis A = das Netz hängt nicht zusammen (seltener Ausfall, Wahrscheinlichkeit P). Importance Sampling zieht jede Kante mit q' statt q als ausgefallen und gewichtet; die Varianz ist
-exakt aus der Aufzählung berechenbar (CV^2). Diagnose: ESS = N / (1 + CV^2); Pareto-k̂ gilt nur bei stetigen Gewichten (Begleiter), im Netz mit seinen diskreten Gewichten nicht.
+exakt aus der Aufzählung berechenbar (CV^2). Diagnose: ESS, nahe dem Optimum etwa N / (1 + CV^2); Pareto-k̂ gilt nur bei stetigen Gewichten (Begleiter), bei den diskreten Gewichten des Netzes in dieser Demo nicht.
 """
 
 from __future__ import annotations
@@ -133,7 +133,7 @@ def verdict_main(a: Analysis, settings: Settings) -> tuple[str, str]:
     if abs(settings.qp - settings.q) < 1e-12:
         return "warning", kopf + mess + " Ohne Kippung sehen die meisten Läufe keinen oder kaum einen Ausfall."
     if np.isfinite(a.k_med) and a.k_med > C.K_UNRELIABLE:
-        return "success", kopf + mess + f" Pareto-k̂ liegt im Median bei {de(a.k_med, 1)} und damit über {de(C.K_UNRELIABLE, 1)}, obwohl die Kippung gut ist: bei diskreten Gewichten taugt k̂ nicht, ESS ist die Diagnose."
+        return "success", kopf + mess + f" Pareto-k̂ liegt im Median bei {de(a.k_med, 1)} und damit über {de(C.K_UNRELIABLE, 1)}, obwohl die Kippung gut ist: bei den diskreten Gewichten dieser Demo taugt k̂ nicht, ESS ist die Diagnose."
     return "success", kopf + mess
 
 
@@ -155,7 +155,7 @@ def verdict_qp_curve(exp: dict, settings: Settings) -> tuple[str, str]:
     rows = {round(r["qp"], 9): r for r in exp["rows"]}
     far = max((r for r in exp["rows"] if r["qp"] <= 0.75), key=lambda r: r["qp"])
     return "info", (f"Optimum bei q' = {de(exp['qp_opt'], 3)} mit CV² = {dz(exp['cv2_opt'])} gegen {dz(exp['cv2_plain'])} beim einfachen Ziehen; der kleinste Schnitt hat {kanten(exp['min_cut'])} von {exp['m']} "
-                    f"({de(exp['min_cut'] / exp['m'], 3)}). Zu schwach gekippt (q' kleiner als q) ist schlechter als einfaches Ziehen, bei q' = {de(far['qp'], 2)} ist CV² = {dz(far['cv2'])}: zu viel Kippung entartet.")
+                    f"({de(exp['min_cut'] / exp['m'], 3)}). Zu schwach gekippt (q' kleiner als q) ist schlechter als einfaches Ziehen, bei q' = {de(far['qp'], 2)} ist CV² = {dz(far['cv2'])}: zu viel Kippung entartet (hier ab q' ≈ 0,4 schlimmer als gar keine).")
 
 
 # --- Experiment 2: Seltenheit (exakt) -----------------------------------------------------------------------------------------------------------
@@ -177,7 +177,7 @@ def verdict_rarity(exp: dict) -> tuple[str, str]:
     a, b = rows[0], rows[-1]
     return "info", (f"Bei q = {de(a['q'], 3)} gewinnt die optimale Kippung nur das {dz(a['gain'])}-Fache, bei q = {de(b['q'], 3)} das {dz(b['gain'])}-Fache: "
                     f"einfaches Ziehen braucht dort {dz(b['n_plain'])} Ziehungen für 10 % Fehler, die Kippung {dz(b['n_opt'])}. Das optimale q' bleibt dabei zwischen {de(min(r['qp_opt'] for r in rows), 3)} und {de(max(r['qp_opt'] for r in rows), 3)} "
-                    f"(kleinster Schnitt {kanten(exp['min_cut'])} von {exp['m']}): man braucht dieses Wissen vorher.")
+                    f"(kleinster Schnitt {kanten(exp['min_cut'])} von {exp['m']}): für kleine q gilt das, ohne dieses Wissen muss man q' lernen (Stück 8).")
 
 
 # --- Experiment 3: Simulation gegen q' --------------------------------------------------------------------------------------------------------
@@ -210,8 +210,8 @@ def verdict_sweep(exp: dict, settings: Settings) -> tuple[str, str]:
     plain, opt = rows[0], rows[2]
     far = rows[-1]
     return "warning", (f"Einfaches Ziehen (q' = q): {de(plain['zero'] * 100, 0)} % der Läufe ohne Ausfall, Überdeckung {de(plain['cover'], 2)}. Mit dem optimalen q' = {de(opt['qp'], 3)}: mediane Abweichung {de(opt['med_rel'] * 100, 0)} %, "
-                       f"Überdeckung {de(opt['cover'], 2)}, ESS {de(opt['ess'], 1)} (exakt {de(opt['ess_exact'], 1)}). Bei q' = {de(far['qp'], 2)}: Abweichung {de(far['med_rel'] * 100, 0)} %, Überdeckung {de(far['cover'], 2)}. "
-                       f"Pareto-k̂ liegt im Netz auch beim optimalen q' bei {dn(opt['k_med'], 1)} und in {de(opt['frac_k_bad'] * 100, 0) if np.isfinite(opt['frac_k_bad']) else '–'} % der Läufe über {de(C.K_UNRELIABLE, 1)}: bei diskreten Gewichten taugt es nicht als Warnung.")
+                       f"Überdeckung {de(opt['cover'], 2)}, ESS {de(opt['ess'], 1)} (Formel {de(opt['ess_exact'], 1)}). Bei q' = {de(far['qp'], 2)}: Abweichung {de(far['med_rel'] * 100, 0)} %, Überdeckung {de(far['cover'], 2)}. "
+                       f"Pareto-k̂ liegt im Netz auch beim optimalen q' bei {dn(opt['k_med'], 1)} und in {de(opt['frac_k_bad'] * 100, 0) if np.isfinite(opt['frac_k_bad']) else '–'} % der Läufe über {de(C.K_UNRELIABLE, 1)}: bei den diskreten Gewichten dieser Demo taugt es nicht als Warnung.")
 
 
 # --- Experiment 4: Genauigkeit und Ziehungen (exakt) -----------------------------------------------------------------------------------------------

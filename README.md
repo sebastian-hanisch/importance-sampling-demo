@@ -7,15 +7,15 @@ Siebtes Stück der Linie **„Monte-Carlo-Schätzung und Varianzreduktion“** i
 
 ## Warum dieses Problem
 
-Fällt ein Netz nur selten aus, sieht einfaches Ziehen kaum einen Ausfall. Importance Sampling kippt die Ausfallwahrscheinlichkeit jeder Kante von q auf q'. Die Fragen: **Wie viel gewinnt man, welche Kippung ist gut, und woran merkt man, dass die Gewichte nicht mehr tragen?** Die Antworten aus der exakten Rechnung sind scharf, und eine davon widerspricht der Gliederung: Pareto-k̂ ist im Netz keine brauchbare Warnung.
+Fällt ein Netz nur selten aus, sieht einfaches Ziehen kaum einen Ausfall. Importance Sampling kippt die Ausfallwahrscheinlichkeit jeder Kante von q auf q'. Die Fragen: **Wie viel gewinnt man, welche Kippung ist gut, und woran merkt man, dass die Gewichte nicht mehr tragen?** Die Antworten aus der exakten Rechnung sind scharf, und eine davon widerspricht der Gliederung: Pareto-k̂ ist bei den diskreten Gewichten dieser Demo keine brauchbare Warnung.
 
 ## Befunde und Korrekturen gegenüber dem Plan
 
 Vor dem Bau wurden die Hypothesen der Gliederung an Messreihen geprüft (Vormessung im Website-Repo, `docs/planung/monte-carlo-planung/vormessung/`). Was sich geändert hat:
 
-- **„Schlechte Wahl liefert unendliche Varianz, erkennbar an Pareto-k̂ und ESS“ trifft im Netz nicht zu.** Der Zustandsraum ist endlich, die Varianz ist immer endlich (nur riesig). **Pareto-k̂ versagt bei diskreten Gewichten**: Es liegt auch beim optimalen q' bei 2,6 (über der Marke 0,7). Die ESS dagegen ist exakt N/(1 + CV²) und die ehrliche Größe. Unendliche Varianz und k̂ zeigt der **stetige Begleiter**.
-- **Das optimale q' ist etwa kleinster Schnitt durch Kantenzahl**, fast unabhängig von q: Man findet es nur, wenn man die Struktur der Antwort schon kennt.
-- **Zu viel Kippung ist schlimmer als gar keine** (q' = 0,5: CV² 22 000 gegen 2400).
+- **„Schlechte Wahl liefert unendliche Varianz, erkennbar an Pareto-k̂ und ESS“ trifft im Netz nicht zu.** Der Zustandsraum ist endlich, die Varianz ist für 0 < q' < 1 endlich (nur riesig). **Pareto-k̂ ist bei den diskreten Gewichten dieser Demo (zwei Netze, eigene Implementierung) nicht aussagekräftig**: Es liegt auch beim optimalen q' bei 2,6 (über der Marke 0,7), trotz endlicher Varianz und guter ESS. Die ESS ist nahe dem Optimum etwa N/(1 + CV²) (12,4 gegen 12,3) und die ehrlichere Größe; bei zu starker Kippung liegt die gemessene Median-ESS (2,9) weit über diesem Wert (0,04). Unendliche Varianz und k̂ zeigt der **stetige Begleiter**.
+- **Das optimale q' ist für kleine q (q ≤ 0,02) etwa kleinster Schnitt durch Kantenzahl**; ohne Kenntnis der Struktur muss man q' lernen (Stück 8).
+- **Zu viel Kippung (hier ab q' ≈ 0,4) ist schlimmer als gar keine** (q' = 0,5: CV² 22 000 gegen 2400).
 - **Der Gewinn wächst mit der Seltenheit** (2-fach bei q = 0,1, 2200-fach bei q = 0,001).
 
 ## Modell
@@ -23,7 +23,7 @@ Vor dem Bau wurden die Hypothesen der Gliederung an Messreihen geprüft (Vormess
 - **Ereignis:** A = das Netz hängt nicht zusammen. Jede Kante fällt unabhängig mit q aus; P = Wahrscheinlichkeit von A. Netze: Gitter 3×3, 3×4 und die Hantel (bis 17 Kanten, alle Kantenmengen live aufgezählt).
 - **Importance Sampling:** Jede Kante fällt mit q' aus. Gewicht einer Ziehung mit f Ausfällen: w(f) = (q/q')^f ((1−q)/(1−q'))^(m−f); Schätzer: Mittel von 1[A]·w, erwartungstreu.
 - **Exakt:** zweites Moment M₂ = Σ_f N_f [q^f(1−q)^(m−f)]² / [q'^f(1−q')^(m−f)] mit N_f = Zahl der Ausfallmengen mit f ausgefallenen Kanten; CV² = (M₂ − P²)/P²; Ziehungen für relativen Fehler ε: CV²/ε². Einfaches Ziehen ist q' = q.
-- **Diagnose:** ESS = (Σw)²/Σw² (im Erwartungswert N/(1 + CV²)); Pareto-k̂ nach Zhang und Stephens (2009) in der Form von Vehtari et al.: eine verallgemeinerte Pareto-Verteilung an den größten Gewichten; k ≥ ½ heißt unendliche Varianz, k̂ über 0,7 gilt als nicht verlässlich.
+- **Diagnose:** ESS = (Σw)²/Σw² (nahe dem Optimum etwa N/(1 + CV²)); Pareto-k̂ nach Zhang und Stephens (2009) in der Form von Vehtari et al.: eine verallgemeinerte Pareto-Verteilung an den größten Gewichten; k ≥ ½ heißt unendliche Varianz, k̂ über 0,7 gilt als nicht verlässlich.
 - **Stetiger Begleiter:** P(X > t) für X ~ Exp(1), Hilfsverteilung Exp(θ), Gewicht e^{−(1−θ)x}/θ; M₂ = e^{−(2−θ)t}/(θ(2−θ)) für θ < 2, sonst unendlich; für θ > 1 ist der Randindex θ/(θ−1), also k = (θ−1)/θ. Mathematik im 📐-Expander der App.
 
 ## Methodik
@@ -38,21 +38,21 @@ Alle Zahlen stehen in `tests/test_claims.py`. Standardfall: Gitter 3×4, q = 0,0
 |---|---|
 | Wie selten ist der Ausfall, wie viel Ziehungen braucht einfaches Ziehen? (exakt) | P = **4,2·10⁻⁴**, CV² = **2397**, für 10 % relativen Fehler **239 737 Ziehungen** (bei q = 0,001: 24,9 Millionen) |
 | Optimale Kippung und Gewinn, 3×4 (exakt), q = 0,1 / 0,05 / 0,02 / 0,01 / 0,005 / 0,002 / 0,001 | Gewinn **2,1 / 3,4 / 10,1 / 29,8 / 101 / 572 / 2210**; q' = 0,176 / 0,137 / 0,121 / **0,119** / 0,118 / 0,118 / 0,118; Ziehungen für 10 % bei q = 0,01: **8057** statt 239 737; bei q = 0,001: **11 263** statt 24,9 Millionen |
-| Woher kommt das optimale q'? | kleinster Schnitt durch Kantenzahl: 3×4 **2/17 = 0,118**, 3×3 (q = 0,001) 2/12 = 0,167 (gefunden 0,1667), Hantel 1/7 = 0,143 (gefunden 0,1428); Gewinn bei q = 0,001: 4681 (3×3) und 61 (Hantel) |
+| Woher kommt das optimale q'? (kleine q) | kleinster Schnitt durch Kantenzahl: 3×4 **2/17 = 0,118**, 3×3 (q = 0,001) 2/12 = 0,167 (gefunden 0,1667), Hantel 1/7 = 0,143 (gefunden 0,1428); Gewinn bei q = 0,001: 4681 (3×3) und 61 (Hantel) |
 | Falsche Kippung, 3×4, q = 0,01, CV² | q' = 0,003: **37 104**; q' = 0,01 (einfach): 2397; q' = 0,12: **80,6**; q' = 0,3: 399; q' = 0,5: **22 351**; q' = 0,7: **2,4·10⁷** |
 | Einfaches Ziehen bei N = 1000 (400 Wdh.) | **65 %** der Läufe sehen keinen Ausfall (exakt (1−P)^N = 0,66), Überdeckung des Wald-Intervalls **0,35**, mediane Abweichung 100 % |
-| Standardfall bei N = 1000 | mediane Abweichung **19 %**, keine Nullschätzung, Überdeckung **0,92**, ESS **12,4** (exakt 12,3), mehr als 50 % Fehler in 6 % der Läufe |
-| Zu stark gekippt (q' = 0,5, N = 1000) | mediane Abweichung **98 %**, Überdeckung **0,14**, ESS 2,9; bei q' = 0,7 Überdeckung 0,02 |
-| Hantel, q = 0,01, q' = 0,14, N = 1000 | CV² 93,4 → **13,1** (Gewinn 7,2), mediane Abweichung **8 %**, Überdeckung 0,94, ESS **71,2** (exakt 71,1) |
+| Standardfall bei N = 1000 | mediane Abweichung **19 %**, keine Nullschätzung, Überdeckung **0,92**, ESS **12,4** (Formel 12,3), mehr als 50 % Fehler in 6 % der Läufe |
+| Zu stark gekippt (q' = 0,5, N = 1000) | mediane Abweichung **98 %**, Überdeckung **0,14**, ESS 2,9; bei q' = 0,7 Überdeckung 0,01 bis 0,02 |
+| Hantel, q = 0,01, q' = 0,14, N = 1000 | CV² 93,4 → **13,1** (Gewinn 7,2), mediane Abweichung **8 %**, Überdeckung 0,94, ESS **71,2** (Formel 71,1) |
 | Ziehungen für 50 / 20 / 10 / 5 % Fehler, 3×4, q = 0,01, optimale Kippung (exakt) | **322 / 2014 / 8057 / 32 227**; einfach 9589 / 59 934 / 239 737 / 958 946 |
-| **Pareto-k̂ im Netz (diskrete Gewichte)** | Median **2,6** beim optimalen q' (3×4) und in **100 %** der Läufe über 0,7; Hantel **15,9** (96 %); q' = 0,5: 7,3. Das Verfahren arbeitet dort am besten: k̂ warnt falsch. Beim einfachen Ziehen sind alle Gewichte gleich: k̂ nicht bestimmbar |
+| **Pareto-k̂ im Netz (diskrete Gewichte, zwei Netze, eigene Implementierung)** | Median **2,6** beim optimalen q' (3×4) und in **100 %** der Läufe über 0,7; Hantel **15,9** (96 %); q' = 0,5: 7,3. Das Verfahren arbeitet dort am besten: k̂ warnt falsch (die Werte sind Eigenschaften dieser Implementierung auf Gewichten mit vielen Gleichständen, nicht gegen eine Referenzimplementierung geprüft). Beim einfachen Ziehen sind alle Gewichte gleich: k̂ nicht bestimmbar |
 | **Stetiger Begleiter**, t = 2 (P = 0,135), N = 10 000, θ = 1,2 / 1,5 / 1,8 / 2,0 / 2,5 / 3,0 | exaktes k = (θ−1)/θ = 0,167 / 0,333 / 0,444 / **0,500** / 0,600 / 0,667; **k̂ (Median) 0,18 / 0,34 / 0,44 / 0,50 / 0,58 / 0,60**; CV² 10,5 / 25,8 / 100,7 / **unendlich** / unendlich / unendlich |
-| dasselbe: Überdeckung des Wald-Intervalls | **0,94 / 0,94 / 0,93 / 0,92 / 0,85 / 0,80**: Bei θ = 2 ist die Varianz unendlich und das Intervall merkt es mit N = 10 000 nicht; k̂ = 0,50 ist die Warnung. Optimales θ = **0,382** mit CV² = 2,47 |
+| dasselbe: Überdeckung des Wald-Intervalls | **0,94 / 0,94 / 0,93 / 0,92 / 0,85 / 0,80**: Bei θ = 2 ist die Varianz unendlich und das Intervall merkt es mit N = 10 000 nicht; k̂ über 0,5 warnt hier, knapp darunter (θ = 1,8) bleibt die Varianz endlich, aber sehr groß. Optimales θ = **0,382** mit CV² = 2,47 |
 
 ## Ehrliche Grenzen
 
 - **Nur eine globale Kippung q'** für alle Kanten; eine Kippung je Kante lernt Stück 8.
-- **Pareto-k̂ ist im Netz nicht aussagekräftig**, im stetigen Begleiter schon; eine eigene Implementierung nach Zhang und Stephens, am scipy-Orakel mit bekannten Formparametern geprüft (ξ = 0,2 / 0,5 / 1,0), nicht am Netz.
+- **Pareto-k̂ ist bei den diskreten Gewichten dieser Demo (zwei Netze) nicht aussagekräftig**, im stetigen Begleiter schon; eine eigene Implementierung nach Zhang und Stephens, am scipy-Orakel mit bekannten Formparametern geprüft (ξ = 0,2 / 0,5 / 1,0), nicht am Netz.
 - **Nur das Ereignis „Netzausfall“** und Netze bis 17 Kanten; unabhängige, gleiche Ausfälle. Kein selbstnormiertes Importance Sampling, keine Mischungen von Hilfsverteilungen, kein Vergleich mit Splitting.
 - **Die Überdeckung ist die des Wald-Intervalls** aus dem Standardfehler der gewichteten Werte; bei wenigen effektiven Ausfällen ist es zu schmal.
 - **Messungen mit wenigen Ausfällen** (kleines N, kleines q) rauschen stark; die exakten Zahlen sind belastbar.
