@@ -21,13 +21,13 @@ Vor dem Bau wurden die Hypothesen der Gliederung an Messreihen geprüft (Vormess
 
 - **Ereignis:** A = das Netz hängt nicht zusammen. Jede Kante fällt unabhängig mit q aus; P = Wahrscheinlichkeit von A. Netze: Gitter 3×3, 3×4 und die Hantel (bis 17 Kanten, alle Kantenmengen live aufgezählt).
 - **Importance Sampling:** Jede Kante fällt mit q' aus. Gewicht einer Ziehung mit f Ausfällen: w(f) = (q/q')^f ((1−q)/(1−q'))^(m−f); Schätzer: Mittel von 1[A]·w, erwartungstreu.
-- **Exakt:** zweites Moment M₂ = Σ_f N_f [q^f(1−q)^(m−f)]² / [q'^f(1−q')^(m−f)] mit N_f = Zahl der Ausfallmengen mit f ausgefallenen Kanten; CV² = (M₂ − P²)/P²; Ziehungen für relativen Fehler ε: CV²/ε². Einfaches Ziehen ist q' = q.
-- **Diagnose:** ESS = (Σw)²/Σw² (nahe dem Optimum etwa N/(1 + CV²)); Pareto-k̂ nach Zhang und Stephens (2009) in der Form von Vehtari et al.: eine verallgemeinerte Pareto-Verteilung an den größten Gewichten; k ≥ ½ heißt unendliche Varianz, k̂ über 0,7 gilt als nicht verlässlich.
+- **Exakt:** zweites Moment M₂ = Σ_f N_f [q^f(1−q)^(m−f)]² / [q'^f(1−q')^(m−f)] mit N_f = Zahl der Kantenmengen mit genau f ausgefallenen Kanten, bei denen das Netz getrennt ist (das Ereignis A tritt ein); CV² = (M₂ − P²)/P²; Ziehungen für relativen Fehler ε: CV²/ε². Einfaches Ziehen ist q' = q.
+- **Diagnose:** ESS = (Σw)²/Σw² (etwa N/(1 + CV²), solange die Stichprobe das zweite Moment trifft, grob für N groß gegen 1 + CV²); Pareto-k̂ nach Zhang und Stephens (2009) in der Form von Vehtari et al.: eine verallgemeinerte Pareto-Verteilung an den größten Gewichten; k ≥ ½ heißt unendliche Varianz, k̂ über 0,7 gilt als nicht verlässlich.
 - **Stetiger Begleiter:** P(X > t) für X ~ Exp(1), Hilfsverteilung Exp(θ), Gewicht e^{−(1−θ)x}/θ; M₂ = e^{−(2−θ)t}/(θ(2−θ)) für θ < 2, sonst unendlich; für θ > 1 ist der Randindex θ/(θ−1), also k = (θ−1)/θ. Mathematik im 📐-Expander der App.
 
 ## Methodik
 
-Zufallszahlen aus festen SplitMix64-Strömen (nie ein einzelner Seed). Wahrheit, P und alle N_f aus der vollständigen Aufzählung. Je Messung 300 bis 400 Wiederholungen mit festen Strömen; der stetige Begleiter mit N = 10 000.
+Zufallszahlen aus festen SplitMix64-Strömen (jede Wiederholung mit eigenem, aus Schlüssel und Nummer abgeleitetem Strom). Wahrheit, P und alle N_f aus der vollständigen Aufzählung. Je Messung 300 bis 400 Wiederholungen mit festen Strömen; der stetige Begleiter mit N = 10 000.
 
 ## Befunde (gemessen, keine Behauptungen)
 
@@ -44,14 +44,14 @@ Alle Zahlen stehen in `tests/test_claims.py`. Standardfall: Gitter 3×4, q = 0,0
 | Zu stark gekippt (q' = 0,5, N = 1000) | mediane Abweichung **98 %**, Überdeckung **0,14**, ESS 2,9; bei q' = 0,7 Überdeckung 0,01 bis 0,02 |
 | Hantel, q = 0,01, q' = 0,14, N = 1000 | CV² 93,4 → **13,1** (Gewinn 7,2), mediane Abweichung **8 %**, Überdeckung 0,94, ESS **71,2** (Formel 71,1) |
 | Ziehungen für 50 / 20 / 10 / 5 % Fehler, 3×4, q = 0,01, optimale Kippung (exakt) | **322 / 2014 / 8057 / 32 227**; einfach 9589 / 59 934 / 239 737 / 958 946 |
-| **Pareto-k̂ im Netz (diskrete Gewichte, zwei Netze, eigene Implementierung)** | Median **2,6** beim optimalen q' (3×4) und in **100 %** der Läufe über 0,7; Hantel **15,9** (96 %); q' = 0,5: 7,3. Das Verfahren arbeitet dort am besten: k̂ warnt falsch (die Werte sind Eigenschaften dieser Implementierung auf Gewichten mit vielen Gleichständen, nicht gegen eine Referenzimplementierung geprüft). Beim einfachen Ziehen sind alle Gewichte gleich: k̂ nicht bestimmbar |
+| **Pareto-k̂ im Netz (diskrete Gewichte, zwei Netze, eigene Implementierung)** | Median **2,6** beim optimalen q' (3×4) und in **100 %** der Läufe über 0,7; Hantel **15,9** (96 %); q' = 0,5: 7,3. Das Verfahren arbeitet dort am besten: k̂ ist hier nicht aussagekräftig. Unter den Gewichten im Schweif (3×4, N = 1000: Median 82; höchstens min(0,2·N, 3·√N) = 94, aber es gibt im Median nur 83 positive Gewichte) kommen nur etwa sechs verschiedene Werte vor, die Überschreitungen der Schwelle liegen weit auseinander; eine Pareto-Anpassung ist dort entartet. Eine zweite Anpassung (scipy, Maximum Likelihood) an dieselben Überschreitungen gibt ebenfalls ξ ≈ 2,9 (40 Läufe, alle über 0,7), das ist aber kein Beleg für eine richtige Umsetzung, weil auch sie bei so wenigen Werten entartet. Die Gleichstände allein sind es nicht: Ein Rauschen von 10⁻⁶ auf den Gewichten lässt den Median unverändert (`test_pareto_k_bei_diskreten_gewichten_ist_eigenschaft_der_daten`). Beim einfachen Ziehen sind alle Gewichte gleich: k̂ nicht bestimmbar |
 | **Stetiger Begleiter**, t = 2 (P = 0,135), N = 10 000, θ = 1,2 / 1,5 / 1,8 / 2,0 / 2,5 / 3,0 | exaktes k = (θ−1)/θ = 0,167 / 0,333 / 0,444 / **0,500** / 0,600 / 0,667; **k̂ (Median) 0,18 / 0,34 / 0,44 / 0,50 / 0,58 / 0,60**; CV² 10,5 / 25,8 / 100,7 / **unendlich** / unendlich / unendlich |
 | dasselbe: Überdeckung des Wald-Intervalls | **0,94 / 0,94 / 0,93 / 0,92 / 0,85 / 0,80**: Bei θ = 2 ist die Varianz unendlich und das Intervall merkt es mit N = 10 000 nicht; k̂ über 0,5 warnt hier, knapp darunter (θ = 1,8) bleibt die Varianz endlich, aber sehr groß. Optimales θ = **0,382** mit CV² = 2,47 |
 
 ## Ehrliche Grenzen
 
 - **Nur eine globale Kippung q'** für alle Kanten; eine Kippung je Kante lernt Stück 8.
-- **Pareto-k̂ ist bei den diskreten Gewichten dieser Demo (zwei Netze) nicht aussagekräftig**, im stetigen Begleiter schon; eine eigene Implementierung nach Zhang und Stephens, am scipy-Orakel mit bekannten Formparametern geprüft (ξ = 0,2 / 0,5 / 1,0), nicht am Netz.
+- **Pareto-k̂ ist bei den diskreten Gewichten dieser Demo (zwei Netze) nicht aussagekräftig**, im stetigen Begleiter schon; eine eigene Implementierung nach Zhang und Stephens, am scipy-Orakel mit bekannten Formparametern geprüft (ξ = 0,2 / 0,5 / 1,0); am Netz nur gegen die Maximum-Likelihood-Anpassung von scipy auf denselben Überschreitungen (gleiche Größenordnung, beide weit über 0,7), nicht gegen eine Referenzimplementierung wie das R-Paket loo.
 - **Nur das Ereignis „Netzausfall“** und Netze bis 17 Kanten; unabhängige, gleiche Ausfälle. Kein selbstnormiertes Importance Sampling, keine Mischungen von Hilfsverteilungen, kein Vergleich mit Splitting.
 - **Die Überdeckung ist die des Wald-Intervalls** aus dem Standardfehler der gewichteten Werte; bei wenigen effektiven Ausfällen ist es zu schmal.
 - **Messungen mit wenigen Ausfällen** (kleines N, kleines q) rauschen stark; die exakten Zahlen sind belastbar.

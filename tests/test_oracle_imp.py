@@ -118,3 +118,32 @@ def test_zu_starke_kippung_ist_in_der_simulation_schlechter_als_einfaches_ziehen
     opt = A.simulate_is(X, netz.m, q, 0.136, N, (13, 2), R, P)
     far = A.simulate_is(X, netz.m, q, 0.6, N, (13, 3), R, P)
     assert opt["est"].var(ddof=1) < plain["est"].var(ddof=1) < far["est"].var(ddof=1)
+
+
+def test_pareto_k_bei_diskreten_gewichten_ist_eigenschaft_der_daten():
+    """k̂ liegt im Netz weit über 0,7; die Gleichstände allein sind nicht die Ursache (Rauschen auf den Gewichten ändert den Median nicht), und die Maximum-Likelihood-Anpassung von scipy an dieselben
+    Überschreitungen liegt ebenfalls weit über 0,7 (README: Median 2,6 gegen etwa 2,9). Beides sind Befunde zu entarteten Anpassungen an wenige Werte, kein Beleg für eine richtige Umsetzung."""
+    import imp_evaluation as ev
+    from imp_scenario import named_netz
+    netz = named_netz("3x4")
+    X, _, _ = ev.netz_table(netz)
+    m, q, qp, N = netz.m, 0.01, 0.12, 1000
+    shifts = np.arange(m, dtype=np.int64)
+    rng = np.random.default_rng(7)
+    ks, ks_noise, ml, distinct = [], [], [], []
+    for _ in range(12):
+        fail = rng.random((N, m)) < qp
+        mask = ((~fail).astype(np.int64) << shifts).sum(axis=1)
+        f = fail.sum(axis=1)
+        w = np.where(X[mask] == 0, (q / qp) ** f * ((1.0 - q) / (1.0 - qp)) ** (m - f), 0.0)
+        ks.append(A.pareto_k(w))
+        ks_noise.append(A.pareto_k(w * (1.0 + 1e-6 * rng.standard_normal(N))))
+        ws = np.sort(w[w > 0])
+        M = min(int(min(0.2 * N, 3 * np.sqrt(N))), len(ws) - 1)
+        tail = np.maximum(ws[-M:] - ws[-M - 1], 1e-12 * ws.max())
+        ml.append(scipy_stats.genpareto.fit(tail, floc=0)[0])
+        distinct.append(len(np.unique(ws[-M:])))
+    assert np.median(ks) > 0.7 and min(ks) > 0.7
+    assert np.median(ks_noise) == pytest.approx(np.median(ks), rel=0.05)
+    assert np.median(ml) > 0.7 and np.median(ml) == pytest.approx(np.median(ks), rel=0.4)
+    assert np.median(distinct) <= 10                                                    # nur wenige verschiedene Werte im Schweif
